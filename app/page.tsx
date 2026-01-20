@@ -20,7 +20,7 @@ import {
 
 type Row = { id: number; name: string; tx: string };
 
-const STATE_KEY = 'app/pokedex/0cbaa92114907a941fbc722540eb313ea95f156036629d74038cd0ae5f1a1bd0';
+const STATE_KEY = '02edbc4f6746b1cfd2c2c3358d8f3e310429060a780b4e277d6f16982c72a40e';
 const POLL_MS = 3000;
 
 function normalizeRows(payload: any): Row[] {
@@ -53,8 +53,9 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const query = useMemo(() => new URLSearchParams({ key: STATE_KEY }).toString(), []);
+  const query = new URLSearchParams({ key: `app/pokedex/${STATE_KEY}` }).toString()
 
+  debugger
   const fetchState = useCallback(async () => {
     try {
       setError(null);
