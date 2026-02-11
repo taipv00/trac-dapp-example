@@ -37,7 +37,7 @@ type TracNetworkProvider = {
   requestAccount: () => Promise<string>;
   getAddress: () => Promise<string>;
   getPublicKey: () => Promise<string>;
-  signTracTx?: (txData:any) => Promise<any>;
+  signTracTx?: (walletRequest: any) => Promise<{ tx: string; signature: string }>;
   on?: (event: string, handler: (...args: any[]) => void) => void;
   removeListener?: (event: string, handler: (...args: any[]) => void) => void;
 };
@@ -289,6 +289,7 @@ export default function Page() {
       const context = contextRes?.msb;
       if (!context || typeof context !== 'object') throw new Error('Failed to fetch tx context from peer');
 
+      // Create walletRequest with all data needed for wallet to hash and sign
       const walletRequest = {
         requester: {
           address: walletAddress,
@@ -301,31 +302,23 @@ export default function Page() {
         },
       };
 
-      // Wallet expects a transfer-like txData object with a "from" address, so we embed the trac-peer payload
-      // under `tracPeer` while keeping required top-level fields.
-      const txData = {
-        from: walletAddress,
-        to: walletAddress,
-        amount: '0',
-        validity: '0'.repeat(64),
-        nonce,
-        hash: '0'.repeat(64),
-        _bufferFields: ['hash', 'nonce'],
-        tracPeer: walletRequest,
-      };
-
-      console.log('[trac-peer] outgoing txData for signTracTx:', txData);
+      console.log('[trac-peer] outgoing walletRequest for signTracTx:', walletRequest);
 
       if (typeof provider.signTracTx !== 'function') {
-        await navigator.clipboard.writeText(JSON.stringify(txData, null, 2));
+        await navigator.clipboard.writeText(JSON.stringify(walletRequest, null, 2));
         throw new Error('Wallet does not support signTracTx yet. Signing payload copied to clipboard.');
       }
 
-      const signedRaw = await provider.signTracTx(txData);
-      const { tx, signature } = parseWalletResponse(signedRaw);
+      // Wallet receives walletRequest, hashes it, signs it, and returns {tx, signature}
+      const signedResult = await provider.signTracTx(walletRequest);
+      const { tx, signature } = signedResult;
+
       if (!tx) throw new Error('Wallet did not return tx hash');
       if (!signature) throw new Error('Wallet did not return a signature');
 
+      console.log('[trac-peer] signed result:', { tx, signature });
+
+      // Simulation first
       await httpJson('/api/contract/tx', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -339,6 +332,7 @@ export default function Page() {
         }),
       });
 
+      // Broadcast to blockchain
       await httpJson('/api/contract/tx', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
