@@ -291,15 +291,9 @@ export default function Page() {
 
       // Create walletRequest with all data needed for wallet to hash and sign
       const walletRequest = {
-        requester: {
-          address: walletAddress,
-          pubKeyHex: walletPubKey,
-        },
-        tx: {
-          prepared_command,
-          nonce,
-          context,
-        },
+        prepared_command,
+        nonce,
+        context,
       };
 
       console.log('[trac-peer] outgoing walletRequest for signTracTx:', walletRequest);
