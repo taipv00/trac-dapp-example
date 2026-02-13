@@ -25,6 +25,6 @@ npm run dev
 - Contract interface: `GET /v1/contract/schema`
 - Contract tx flow:
   - `GET /v1/contract/nonce`
-  - `POST /v1/contract/tx/prepare`
+  - `GET /v1/contract/tx/context`
   - `POST /v1/contract/tx` (`sim: true` then `sim: false`)
 - State (Dex collection): `GET /v1/state?key=app/tuxedex/<pubKeyHex>&confirmed=false` (legacy key from the current contract)
